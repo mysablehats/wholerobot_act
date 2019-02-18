@@ -34,6 +34,8 @@
  * @author Sammy Pfeiffer
  */
 
+//I've bastardized this guy's code. Like really. This comment and a lot of others, such as my debug messages SHOULD NOT see the light of day. No idea how to deal with modified source code (although most of the functionality here is provided by his code...)
+
 #include <ros/ros.h>
 #include <ros/console.h>
 #include <image_transport/image_transport.h>
