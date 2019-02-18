@@ -16,6 +16,9 @@
 //FTS* tree=NULL;
 //FTSENT* node=NULL;
 
+XmlRpc::XmlRpcValue v;
+std::vector<std::string> listylist;
+
 std::string curract, currfile;
 
 // so as a simpler fix I will make a publisher out of this guy as well. the best idea here is to make it an additional service call or to intercept the service call? with a flexbe, i think
@@ -125,7 +128,24 @@ bool readsplit(datasetloader_ros::split::Request &req, datasetloader_ros::split:
             thisMovie.ActionDefined = true;
             /* if fts_open is not given FTS_NOCHDIR,
            * fts may change the program's current working directory */
-           allMovies.push_back(thisMovie);
+           bool isinactionlist = false;
+           for(int i=0;i < listylist.size();i++)
+           {
+             if (thisMovie.Action.compare(listylist[i].c_str()) == 0)
+             {
+               isinactionlist = true;
+             }
+             //ROS_WARN("restricting actions to: %s",listylist[i].c_str());
+           }
+           if (isinactionlist)
+           {
+             allMovies.push_back(thisMovie);
+             ROS_WARN("added movie %s because it is of action type %s",thisMovie.filename.c_str(),thisMovie.Action.c_str());
+           }
+           else
+           {
+             ROS_DEBUG("restricting actions, so current video %s, was not added because it is of action %s",thisMovie.filename.c_str(),thisMovie.Action.c_str());
+           }
            }
       }
 
@@ -230,9 +250,18 @@ int main(int argc, char **argv) {
     ros::NodeHandle _nh("~"); // to get the private params
     _nh.getParam("basepath", basepath);
     _nh.getParam("splitdir", splitpath);
+    _nh.getParam("listylist",v);
+    for(int i=0;i < v.size();i++)
+    {
+      listylist.push_back(v[i]);
+      ROS_WARN("restricting actions to: %s",listylist[i].c_str());
+    }
 
     _nh.getParam("test",test);
     _nh.getParam("test_numvids",test_numvids);
+    if (test){
+      ROS_WARN("TEST is ON. will only load %d vids.",test_numvids);
+    }
     ros::ServiceServer service_rn = _nh.advertiseService("read_next", readnext);
     ROS_DEBUG("instantiated service read_next ");
     ros::ServiceServer service_rs = _nh.advertiseService("read_split", readsplit);
