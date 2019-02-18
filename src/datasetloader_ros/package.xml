@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>datasetloader_ros</name>
+  <version>0.0.0</version>
+  <description>Loads the datasets from TSN as a fake camera</description>
+
+  <maintainer email="frederico.klein@plymouth.ac.uk">Frederico B. Klein</maintainer>
+<license>BSD</license>
+
+  <!-- not sure i cam change the License. I am using the base code from a lot of sources though...  -->
+  <!-- this is mostly based on the code from http://www.ros.org/wiki/datasetloader_ros by Sammy Pfeiffer. Changes are "minor"  -->
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>rospy</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>message_generation</build_depend>
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>message_runtime</exec_depend>
+
+  <depend>cv_bridge</depend>
+  <depend>std_srvs</depend>
+  <depend>image_transport</depend>
+  <depend>camera_info_manager</depend>
+  <depend>roscpp</depend>
+
+  <export>
+  </export>
+</package>

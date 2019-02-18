@@ -1,18 +1,1 @@
-[submodule "src/act_class_behaviors"]
-	path = src/act_class_behaviors
-	url = https://github.com/mysablehats/act_class_behaviours.git
-[submodule "src/flexbe_app"]
-	path = src/flexbe_app
-	url = https://github.com/FlexBE/flexbe_app.git
-[submodule "src/flexbe_behavior_engine"]
-	path = src/flexbe_behavior_engine
-	url = https://github.com/team-vigir/flexbe_behavior_engine.git
-[submodule "src/generic_flexbe_states"]
-	path = src/generic_flexbe_states
-	url = https://github.com/FlexBE/generic_flexbe_states.git
-[submodule "src/scene_description"]
-	path = src/scene_description
-	url = https://github.com/mysablehats/scene_description.git
-[submodule "src/video_stream_opencv"]
-	path = src/video_stream_opencv
-	url = https://github.com/frederico-klein/video_stream_opencv.git
+

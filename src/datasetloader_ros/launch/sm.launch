@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+ <launch>
+   <node name="statemachine" pkg="datasetloader_ros" type="state_machine.py" respawn="false" output="screen">
+   </node>
+ </launch>

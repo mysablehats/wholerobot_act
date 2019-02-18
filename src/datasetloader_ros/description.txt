@@ -1,0 +1,53 @@
+So, I am considering making this fairly general, but I do realize that extreme
+generality would make this code too large for my purposes, so I am seeking
+somewhat of a compromise.
+
+I think the following structure makes sense:
+
+Entities I will describe in a scene:
+- Environment
+- Subjects
+- Objects
+
+I could consider other robots as well or that environment is nothing but a big
+object and that we are inside it, but I don't see that as making things any
+easier.
+To be honest this is probably a very complex problem and plugging in multiple
+detectors here with different kinds of information and having scenes with
+varying amount of complexity probably is a complex research problem of its own.
+(I suppose that something that has a rather fixed structure and tries to fill
+in this tree with varying depth depending on how much information you currently
+have could do the trick, but this is not going to be implemented here due to {1}
+I might be wrong and this is not efficient/does not work {2} time constraints.)
+
+What I propose is handwriting the current scene description parts with the
+current algorithms you do have working every time. Keeping a tree like structure
+seems to make sense, so I will try to do that.
+
+Quoting a colleague: representation depends on intention, that is, depending on
+your task, different things may seem important to you. I suppose this is correct
+however here we are going to take a different approach: we are going to describe
+all we can and think about pruning or optimizing resources later.
+
+What should an object detector script do?
+
+Hmm,,, I think the easiest way to deal with this is not dealing with the outputs
+ of the neural networks here. I explain: to create a docker-ros package for a NN
+ you already need to modify it a little bit, so why not spend the extra effort
+ and read the output there and publish it nicely? Maybe because COCO style
+annotations are so common, it would justify having a common reader here that
+would turn JSON into our topics, but I think it is not worth the effort of
+solving this problem now. We hit them as they come.
+
+Back to the original question, the object detector launch + script should launch
+all the nodes it needs to get the object detection going, aggregate its info and
+put it in the format our scene description requires. Ideally the script would be
+nothing and it would just consist of a launch file and everything would be
+published in the right place.
+
+
+# pretends to give openpose type COCO formats? the description is here, but I
+# would need to run this and check is everything is correct.
+# https://github.com/CMU-Perceptual-Computing-Lab/openpose/blob/master/doc/output.md
+# I probably don't care a lot about pose or position right now, so I will just
+# pretend to output something like a pose of one or many people
