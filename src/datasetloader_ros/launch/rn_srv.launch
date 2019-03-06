@@ -6,6 +6,7 @@
       <!-- Set test to "true" to get only the first 50 videos and check stuff... -->
       <param name="test" value="$(arg testing)"/>
       <param name="test_numvids" value="3"/>
+      <param name="play_without_restricting_from_list" value="true"/>      
       <rosparam param="listylist">["dive","hug","jump"]</rosparam>
   </node>
 </launch>

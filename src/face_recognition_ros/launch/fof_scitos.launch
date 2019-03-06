@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<launch>
+  <node name="face_FINDER" pkg="face_recognition_ros" type="find_one_face.py" respawn="false" output="screen">
+      <param name="image_input" value="/camera/rgb/image_rect_color"/>
+      <!-- <param name="image_input" value="videofiles/image_raw"/> -->
+      <param name="frameskipping" value="2"/>
+      <!-- frameskipping will do a module operation of a frame counter that is
+      incremented after each frame. a value of 1 will thus classify every frame,
+       2 will do every other frame, 3 once every 3 frames and so on -->
+  </node>
+</launch>

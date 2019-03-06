@@ -28,6 +28,7 @@ ros::Publisher labels;
 std_msgs::String done_msg;
 ros::Publisher done;
 bool test = false;
+bool allvids = true;
 int test_numvids = 50;
 
 class MovieFile{
@@ -128,24 +129,31 @@ bool readsplit(datasetloader_ros::split::Request &req, datasetloader_ros::split:
             thisMovie.ActionDefined = true;
             /* if fts_open is not given FTS_NOCHDIR,
            * fts may change the program's current working directory */
-           bool isinactionlist = false;
-           for(int i=0;i < listylist.size();i++)
-           {
-             if (thisMovie.Action.compare(listylist[i].c_str()) == 0)
-             {
-               isinactionlist = true;
-             }
-             //ROS_WARN("restricting actions to: %s",listylist[i].c_str());
-           }
-           if (isinactionlist)
+           if (allvids)
            {
              allMovies.push_back(thisMovie);
-             ROS_WARN("added movie %s because it is of action type %s",thisMovie.filename.c_str(),thisMovie.Action.c_str());
            }
            else
            {
-             ROS_DEBUG("restricting actions, so current video %s, was not added because it is of action %s",thisMovie.filename.c_str(),thisMovie.Action.c_str());
-           }
+             bool isinactionlist = false;
+             for(int i=0;i < listylist.size();i++)
+             {
+               if (thisMovie.Action.compare(listylist[i].c_str()) == 0)
+               {
+                 isinactionlist = true;
+               }
+               //ROS_WARN("restricting actions to: %s",listylist[i].c_str());
+             }
+             if (isinactionlist)
+             {
+               allMovies.push_back(thisMovie);
+               ROS_WARN("added movie %s because it is of action type %s",thisMovie.filename.c_str(),thisMovie.Action.c_str());
+             }
+             else
+             {
+               ROS_DEBUG("restricting actions, so current video %s, was not added because it is of action %s",thisMovie.filename.c_str(),thisMovie.Action.c_str());
+             }
+             }
            }
       }
 
@@ -250,13 +258,16 @@ int main(int argc, char **argv) {
     ros::NodeHandle _nh("~"); // to get the private params
     _nh.getParam("basepath", basepath);
     _nh.getParam("splitdir", splitpath);
+    _nh.getParam("play_without_restricting_from_list", allvids);    
     _nh.getParam("listylist",v);
-    for(int i=0;i < v.size();i++)
+    if (!allvids)
     {
-      listylist.push_back(v[i]);
-      ROS_WARN("restricting actions to: %s",listylist[i].c_str());
+      for(int i=0;i < v.size();i++)
+      {
+        listylist.push_back(v[i]);
+        ROS_WARN("restricting actions to: %s",listylist[i].c_str());
+      }
     }
-
     _nh.getParam("test",test);
     _nh.getParam("test_numvids",test_numvids);
     if (test){
