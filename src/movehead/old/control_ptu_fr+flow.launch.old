@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<launch>
+  <node name="control_ptu_node" pkg="movehead" type="head_tracking_float.py" respawn="false" output="screen" required="true">
+    <remap from="heads" to="newheads"/>
+  </node>
+</launch>

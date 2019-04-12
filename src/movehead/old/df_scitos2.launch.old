@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- if show a image_view window subscribed to the generated stream -->
+    <arg name="rosmastername" default="SATELLITE-S50-B"/>
+    <machine name="tsn_denseflow" address="tsn_denseflow" user="root" password="ros_ros" env-loader="/catkin_ws/src/dense_flow/env.sh $(arg rosmastername)" ssh-port="22"/>
+  <node name="df_node" machine="tsn_denseflow" pkg="dense_flow" type="flowbg" respawn="false" output="log" required="true">
+    <param name="save_images" value="false"/>
+    <param name="xFlowFile" value="/dense_flow/flow_x"/>
+    <param name="yFlowFile" value="/dense_flow/flow_y"/>
+    <param name="imgFile" value="/dense_flow/img"/>
+
+    <param name="bound" value="20"/>
+    <param name="type" value="tvl1"/> <!--farn, tvl1, brox  -->
+    <param name="device_id" value="0"/>
+    <param name="step" value="1"/>
+    <param name="new_height" value="256"/>
+    <param name="new_width" value="340"/>
+
+    <param name="read_topic" value="/camera/rgb/image_color"/>
+
+  </node>
+</launch>

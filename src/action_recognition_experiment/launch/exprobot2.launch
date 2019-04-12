@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+ <launch>
+   <!-- <arg name="namespace" default="" /> -->
+   <arg name="visualize" default="false"/>
+   <node name="experiment" pkg="action_recognition_experiment" type="state_machine2.py" respawn="false" output="screen">
+      <!-- ns="$(arg namespace)"> -->
+     <!-- <param name="imagetopic" value="/webcam/image_raw"/> -->
+     <!-- <param name="imagetopic" value="/camera/rgb/image_rect_color"/>
+
+     <param name="depthtopic" value="/camera/depth/image_rect_raw"/> -->
+
+     <!-- <param name="rate" value="1"/> -->
+   </node>
+   <node if="$(arg visualize)" name="experiment_screen" pkg="image_view" type="image_view">
+     <remap from="image" to="theora/screen"/>
+     <param name="image_transport" value="theora"/>
+   </node>
+ </launch>

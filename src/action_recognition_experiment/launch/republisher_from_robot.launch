@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<launch>
+  <node name="republish_rgb" pkg="image_transport" type="republish" respawn="false" output="screen" required="true" args="theora in:=/camera/rgb/image_rect_color raw out:=/local/rgb/image_raw"/>
+  <node name="republish_depth" pkg="image_transport" type="republish" respawn="false" output="screen" required="true" args="compressedDepth in:=/camera/depth/image_rect_raw raw out:=/local/depth/image_raw"/>
+</launch>

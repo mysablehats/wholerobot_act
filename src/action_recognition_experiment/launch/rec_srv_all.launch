@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+ <launch>
+   <!-- <arg name="namespace" default="" /> -->
+   <node name="rec_color" pkg="action_recognition_experiment" type="vid" respawn="false" output="screen">
+     <remap from="image" to="/local/rgb/image_raw"/>
+     <param name="fps" value="30"/>
+   </node>
+   <node name="rec_depth" pkg="action_recognition_experiment" type="vid" respawn="false" output="screen">
+     <remap from="image" to="/local/depth/image_raw"/>
+     <param name="fps" value="30"/>
+     <!-- <param name="colormap" value="COLORMAP_AUTUMN"> -->
+   </node>
+ </launch>

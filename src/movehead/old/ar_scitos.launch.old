@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- if show a image_view window subscribed to the generated stream -->
+    <arg name="visualize" default="false"/>
+    <arg name="rosmastername" default="SATELLITE-S50-B"/>
+    <machine name="tsn_caffe" address="tsn_caffe" user="root" password="ros_ros" env-loader="/temporal-segment-networks/catkin_ws/src/caffe_tsn_ros/env.sh $(arg rosmastername)" ssh-port="22"/>
+    <include file="$(find caffe_tsn_ros)/launch/cf_remote.launch">
+      <arg name="machine" value="tsn_caffe"/>
+      <arg name="img" value="/df_node/image"/>
+    </include>
+    <node if="$(arg visualize)" name="class_image_view" pkg="image_view" type="image_view">
+      <remap from="image" to="/class_overlay_image_raw" />
+    </node>
+</launch>

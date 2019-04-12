@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+ <launch>
+   <!-- <arg name="namespace" default="" /> -->
+   <node name="rec_color" pkg="action_recognition_experiment" type="vid" respawn="false" output="screen">
+      <!-- ns="$(arg namespace)"> -->
+     <!-- <param name="imagetopic" value="/webcam/image_raw"/> -->
+     <remap from="image" to="/webcam/image_raw"/>
+     <param name="fps" value="30"/>
+
+   </node>
+ </launch>

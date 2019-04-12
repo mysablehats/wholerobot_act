@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<launch>
+  <node name="republish_heads" pkg="image_transport" type="republish" respawn="false" output="screen" required="true" args="raw in:=/heads_im_new theora out:=/theora/heads_im_new"/>
+  <node name="republish_screen" pkg="image_transport" type="republish" respawn="false" output="screen" required="true" args="raw in:=/screen theora out:=/theora/screen"/>
+</launch>

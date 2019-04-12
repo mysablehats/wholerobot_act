@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="camera_name" default="newheads3" />
+
+  <!-- if show a image_view window subscribed to the generated stream -->
+  	<arg name="visualize" default="true"/>
+    <node name="newheads3_node" pkg="movehead" type="getheadsvel_v3.py" respawn="false" output="screen" required="true">
+      <!-- I don't have parameters yet, but at some point this should be parametrized... -->
+    </node>
+
+
+  <node name="new_heads3_im" pkg="movehead" type="showheads.py" respawn="false" output="screen" required="true">
+    <!-- I don't have parameters yet, but at some point this should be parametrized... -->
+    <remap from="heads_im" to="heads_im_new"/>
+    <remap from="heads" to="newheads"/>
+  </node>
+  <node if="$(arg visualize)" name="$(arg camera_name)_image_view" pkg="image_view" type="image_view">
+    <remap from="image" to="heads_im_new" />
+  </node>
+</launch>

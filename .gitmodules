@@ -1,1 +1,4 @@
 
+[submodule "src/caffe_tsn_ros"]
+	path = src/caffe_tsn_ros
+	url = git@github.com:mysablehats/caffe_tsn_ros.git

@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<launch>
+<node name="all_graph" pkg="mygraphs" type="bar2.py" respawn="false" output="screen">
+  <remap from="rgb1" to="/rgb1/action_label_dic"/>
+  <remap from="rgb2" to="/rgb2/action_label_dic"/>
+  <remap from="rgb3" to="/rgb3/action_label_dic"/>
+  <remap from="flow1" to="/flow1/action_label_dic"/>
+  <remap from="flow2" to="/flow2/action_label_dic"/>
+  <remap from="flow3" to="/flow3/action_label_dic"/>
+  <param name="N" value="3"/>
+</node>
+</launch>

@@ -50,6 +50,8 @@ find_package(OpenCV 2 REQUIRED)
    FILES
    Heads.msg
    HeadsArray.msg
+   HeadsFloat.msg
+   HeadsArrayFloat.msg
  )
 
 ## Generate services in the 'srv' folder

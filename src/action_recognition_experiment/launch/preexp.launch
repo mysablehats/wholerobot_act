@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+ <launch>
+   <include file="$(find action_recognition_experiment)/launch/republisher_from_robot.launch"/>
+   <include file="$(find action_recognition_experiment)/launch/republisher_to_robot.launch"/>
+   <include file="$(find action_recognition_experiment)/launch/rec_srv_all.launch"/>
+   <!-- <include file="$(find action_recognition_experiment)/launch/fr_scitos_vpn_.launch"/> -->
+   <include file="$(find action_recognition_experiment)/launch/df.launch"/>
+   <include file="$(find action_recognition_experiment)/launch/ar.launch">
+     <arg name="rgbOrFlow" default="rgb"/>
+     <arg name="split" default="1"/>
+     <arg name="graphit" default="false"/>
+   </include>
+   <include file="$(find action_recognition_experiment)/launch/ar.launch">
+     <arg name="rgbOrFlow" default="flow"/>
+     <arg name="split" default="1"/>
+     <arg name="graphit" default="false"/>
+   </include>
+ </launch>

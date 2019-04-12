@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+ <launch>
+   <!-- <arg name="namespace" default="" /> -->
+   <node name="experiment" pkg="action_recognition_experiment" type="recorder_wrap.py" respawn="false" output="screen">
+      <!-- ns="$(arg namespace)"> -->
+     <!-- <param name="imagetopic" value="/webcam/image_raw"/> -->
+     <param name="image" value="/camera/rgb/image_rect_color"/>
+     <param name="name" value="color"/>
+     <param name="fps" value="30"/>
+     <param name="duration" value="5"/>
+
+     <param name="dir" value="/mnt/externaldrive/var/datasets/test/"/>
+     <param name="activity" value="nope"/>
+
+     <!-- <param name="rate" value="1"/> -->
+   </node>
+ </launch>
