@@ -1,0 +1,9 @@
+smile_6.avi 2
+smile_4.avi 0
+smile_3.avi 1
+smile_8.avi 1
+smile_1.avi 0
+smile_7.avi 1
+smile_5.avi 1
+smile_2.avi 2
+smile_0.avi 1

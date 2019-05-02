@@ -1,0 +1,8 @@
+jump_7.avi 1
+jump_5.avi 2
+jump_2.avi 1
+jump_0.avi 1
+jump_6.avi 2
+jump_4.avi 0
+jump_3.avi 0
+jump_1.avi 1

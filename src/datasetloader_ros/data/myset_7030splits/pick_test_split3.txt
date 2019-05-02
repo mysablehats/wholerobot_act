@@ -1,0 +1,8 @@
+pick_5.avi 0
+pick_7.avi 1
+pick_0.avi 0
+pick_2.avi 2
+pick_4.avi 2
+pick_6.avi 1
+pick_1.avi 1
+pick_3.avi 1

@@ -1,0 +1,9 @@
+clap_4.avi 1
+clap_6.avi 1
+clap_1.avi 1
+clap_8.avi 2
+clap_3.avi 1
+clap_5.avi 0
+clap_7.avi 1
+clap_0.avi 0
+clap_2.avi 2

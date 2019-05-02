@@ -1,0 +1,11 @@
+chew_0.avi 1
+chew_9.avi 0
+chew_4.avi 1
+chew_10.avi 1
+chew_1.avi 2
+chew_7.avi 1
+chew_5.avi 2
+chew_2.avi 1
+chew_6.avi 1
+chew_3.avi 2
+chew_8.avi 0

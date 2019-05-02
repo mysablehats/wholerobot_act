@@ -1,0 +1,7 @@
+pour_4.avi 2
+pour_6.avi 1
+pour_1.avi 1
+pour_3.avi 0
+pour_5.avi 1
+pour_0.avi 1
+pour_2.avi 2

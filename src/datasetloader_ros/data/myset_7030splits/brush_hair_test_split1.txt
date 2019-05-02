@@ -1,0 +1,10 @@
+brush_hair_7.avi 1
+brush_hair_5.avi 2
+brush_hair_2.avi 1
+brush_hair_0.avi 1
+brush_hair_9.avi 1
+brush_hair_6.avi 1
+brush_hair_4.avi 0
+brush_hair_3.avi 1
+brush_hair_8.avi 2
+brush_hair_1.avi 2

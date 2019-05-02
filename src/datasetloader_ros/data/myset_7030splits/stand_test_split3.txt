@@ -1,0 +1,5 @@
+stand_2.avi 2
+stand_3.avi 1
+stand_0.avi 0
+stand_1.avi 1
+stand_4.avi 1

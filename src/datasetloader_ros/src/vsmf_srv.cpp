@@ -53,7 +53,9 @@
 #include <std_msgs/Bool.h>
 #include <std_srvs/Empty.h>
 #include <assert.h>
+#include <signal.h>
 
+bool DEBUG = false;//true;
 
 std::mutex q_mutex;
 std::queue<cv::Mat> framesQueue;
@@ -66,13 +68,7 @@ ros::ServiceClient stoponevid_client;
 datasetloader_ros::actvid srv;
 double set_camera_fps;
 int max_queue_size;
-bool new_file;
-ros::Publisher newfilepub;
-std_msgs::Bool nfmsg;
-//implements a simple lock to threaded playing instance
-bool playing, hardstop;
-boost::condition_variable cond;
-boost::mutex mut;
+
 // Based on the ros tutorial on transforming opencv images to Image messages
 
 sensor_msgs::CameraInfo get_default_camera_info_from_image(sensor_msgs::ImagePtr img){
@@ -103,171 +99,250 @@ sensor_msgs::CameraInfo get_default_camera_info_from_image(sensor_msgs::ImagePtr
 }
 
 
-void do_capture(ros::NodeHandle &nh) {
-  ROS_INFO("calling do_capture");
+class LockableCapture{
 
-      cv::Mat frame;
-      ros::Rate camera_fps_rate(set_camera_fps);
+  //implements a simple lock to threaded playing instance
+  boost::mutex mut;
+  boost::condition_variable cond;
+  bool new_file;
 
-      // Read frames as fast as possible
-      while (nh.ok()) {
-        ROS_DEBUG("MARCO : BEGINNING OF do_capture NHOK BIT");
+  // maybe this should be instantiated privately in the LockableCapture class? or removed;
+  std_msgs::Bool nfmsg;
 
-        boost::unique_lock<boost::mutex> lock(mut);
-        while (!playing){
-          if (hardstop)
-          {
-            ROS_DEBUG("NOT Clearing frame, since hardstop is on, BUT CLEARING QUEUE!");
-            //MAYBE I DONT NEED TO DO THIS
-            //frame.release();
-            //need to clear the queue too, otherwise it doesn't work!
-            //no idea what this was doing. maybe a mistake?
-            //std::lock_guard<std::mutex> g(q_mutex);
-            framesQueue = emptyFramesQueue;
+public:
+  ros::Publisher newfilepub;
+  bool autoplay;
+
+  bool playing, hardstop;
+
+//constructor
+LockableCapture(bool ap);
+//destructor
+~LockableCapture() {
+  // need to unlock the thread!
+  //needs to be playing to get out of the
+  ROS_INFO("destructor called");
+
+  playing = true;
+  cond.notify_one();
+  ROS_INFO("destructor ended");
+
+  //this should be it.
+}
+
+
+  bool play(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+    playing = true;
+    boost::lock_guard<boost::mutex> lock(mut);
+    cond.notify_one();
+    ROS_INFO("Started playing now.");
+    return true;
+  }
+
+  bool stop(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+    ROS_INFO("Stopped was called. but maybe I can't clear the lock.");
+
+    playing = false;
+    cond.notify_one();
+
+    // boost::lock_guard<boost::mutex> lock(mut);
+    // ROS_INFO("Stop: is notify_one blocking?.");
+
+    // cond.notify_one();
+
+    //cond.notify_all();
+    // ROS_INFO("CAN clear the lock!");
+    ROS_INFO("Stopped playing.");
+    return true;
+  }
+
+  void do_capture(ros::NodeHandle &nh) {
+    ROS_INFO("calling do_capture");
+
+        cv::Mat frame;
+        ros::Rate camera_fps_rate(set_camera_fps);
+
+        // Read frames as fast as possible
+        while (nh.ok()) {
+          ROS_DEBUG("do_capture: MARCO : BEGINNING OF do_capture NHOK BIT");
+
+          boost::unique_lock<boost::mutex> lock(mut);
+          while (!playing){
+            if (hardstop)
+            {
+              ROS_DEBUG("do_capture: NOT Clearing frame, since hardstop is on, BUT CLEARING QUEUE!");
+              //MAYBE I DONT NEED TO DO THIS
+              //frame.release();
+              //need to clear the queue too, otherwise it doesn't work!
+              //no idea what this was doing. maybe a mistake?
+              //std::lock_guard<std::mutex> g(q_mutex);
+              framesQueue = emptyFramesQueue;
+            }
+            ROS_WARN("do_capture: WAITING ON LOCK!");
+            cond.wait(lock);
+            ROS_DEBUG("do_capture: CLEARED LOCK");
           }
-          ROS_WARN("WAITING ON LOCK!");
-          cond.wait(lock);
-          ROS_DEBUG("CLEARED LOCK");
-        }
-          //cap >> frame; //i suppose i could have checked for a null frame as well
-          ROS_DEBUG("ABOUT TO FRAMECAP");
-          bool haveframe = cap.read(frame);
-          ROS_DEBUG("FRAMECAP OK");
-          if (!haveframe)
-          {
-            ROS_DEBUG("Reached the end of the video, didn't I?");
-            // i can tell tsn to calculate the class now, can't i?
-            std_srvs::Empty emptycallmessage;
-            ROS_DEBUG("ABOUT TO CALL STOPVID FROM CLASSIFIER");
-            stoponevid_client.call(emptycallmessage); //do I need to use an empty std_srvs object here?
-            ROS_DEBUG("DONE CALLING STOPVID FROM CLASSIFIER");
-            if (client.call(srv)){
-              //I can tell the tsn to start accumulating scores now, can't i?
-              //std_srvs::Empty emptycallmessage2;
-              ROS_DEBUG("ABOUT TO STARTVID FROM CLASSIFIER AGAIN");
-              startonevid_client.call(emptycallmessage); //same as above...
-              ROS_DEBUG("DONE CALL TO STARTVID FROM CLASSIFIER");
-              ROS_INFO("Got service response:\nFile: %s\nAction: %s\nActionDefined: %d  ", srv.response.File.c_str(), srv.response.Action.c_str(), srv.response.ActionDefined);
-              cap.open(srv.response.File); //so im not checking to see if the file exists. we hope it does.
-              ROS_DEBUG("OPENED FILE DIDN'T BRAKE");
-              haveframe = cap.read(frame);
-              if (!haveframe)
-              {
-                //Im stopping racing conditions. this has happened for too long!
-                ROS_WARN("Could not acquire frame. Maybe my list is empty. Stopping play.");
-                playing = false;
-                frame.release();
-                framesQueue = emptyFramesQueue; ///del del del!
-                // boost::lock_guard<boost::mutex> lock(mut);
-                // cond.notify_all();
-                continue;
+            //cap >> frame; //i suppose i could have checked for a null frame as well
+            ROS_DEBUG("do_capture: ABOUT TO FRAMECAP");
+            bool haveframe = cap.read(frame);
+            ROS_DEBUG("do_capture: FRAMECAP OK");
+            if (!haveframe)
+            {
+              ROS_DEBUG("do_capture: Reached the end of the video, didn't I?");
+              // i can tell tsn to calculate the class now, can't i?
+              std_srvs::Empty emptycallmessage;
+              ROS_DEBUG("do_capture: ABOUT TO CALL STOPVID FROM CLASSIFIER");
+              stoponevid_client.call(emptycallmessage); //do I need to use an empty std_srvs object here?
+              ROS_DEBUG("do_capture: DONE CALLING STOPVID FROM CLASSIFIER");
+              if (client.call(srv)){
+                //I can tell the tsn to start accumulating scores now, can't i?
+                //std_srvs::Empty emptycallmessage2;
+                ROS_DEBUG("do_capture: ABOUT TO STARTVID FROM CLASSIFIER AGAIN");
+                startonevid_client.call(emptycallmessage); //same as above...
+                ROS_DEBUG("do_capture: DONE CALL TO STARTVID FROM CLASSIFIER");
+                ROS_INFO("Got service response:\nFile: %s\nAction: %s\nActionDefined: %d  ", srv.response.File.c_str(), srv.response.Action.c_str(), srv.response.ActionDefined);
+                cap.open(srv.response.File); //so im not checking to see if the file exists. we hope it does.
+                ROS_DEBUG("do_capture: OPENED FILE DIDN'T BRAKE");
+                haveframe = cap.read(frame);
+                if (!haveframe)
+                {
+                  //Im stopping racing conditions. this has happened for too long!
+                  ROS_WARN("do_capture: Could not acquire frame. Maybe my list is empty. Stopping play.");
+                  playing = false;
+                  frame.release();
+                  framesQueue = emptyFramesQueue; ///del del del!
+                  // boost::lock_guard<boost::mutex> lock(mut);
+                  // cond.notify_all();
+                  continue;
+                }
+                else
+                {
+                  ROS_DEBUG("do_capture: HAVEFRAME!");
+                }
               }
               else
               {
-                ROS_DEBUG("HAVEFRAME!");
+                ROS_ERROR("do_capture: Failed to call service read_next. I'm assuming it isn't running?");
+                ROS_INFO("do_capture: Stopping play.");
+                playing = false;
               }
+              new_file = true;
+            }else{
+              ROS_DEBUG("do_capture: no newfile. should I just issue a continue here to make it lock?");
+              new_file = false;
             }
-            else
+            ROS_DEBUG("do_capture: just before some strange publisher I am not even sure I need anymore");
+
+            nfmsg.data = new_file;
+            newfilepub.publish(nfmsg);
+            if (video_stream_provider_type == "videofile")
             {
-              ROS_ERROR("Failed to call service read_next. I'm assuming it isn't running?");
-              ROS_INFO("Stopping play.");
-              playing = false;
+                ROS_DEBUG("do_capture: am I sleeping for too long? ");
+
+                camera_fps_rate.sleep();
             }
-            new_file = true;
-          }else{
-            ROS_DEBUG("no newfile. should I just issue a continue here to make it lock?");
-            new_file = false;
-          }
-          ROS_DEBUG("just before some strange publisher I am not even sure I need anymore");
+            ROS_DEBUG("do_capture: just before the frame pusher guy. ");
 
-          nfmsg.data = new_file;
-          newfilepub.publish(nfmsg);
-          if (video_stream_provider_type == "videofile")
-          {
-              camera_fps_rate.sleep();
-          }
-          ROS_DEBUG("just before the frame pusher guy. ");
+            if(!frame.empty()) {
+                ROS_DEBUG("do_capture: not my lock... ");
+                std::lock_guard<std::mutex> g(q_mutex);
+                // accumulate only until max_queue_size
+                ROS_DEBUG("do_capture: cleared not my LOCK");
+                if (framesQueue.size() < max_queue_size) {
+                    framesQueue.push(frame.clone());
+                    ROS_DEBUG("do_capture: done pushing fram to queue, but queue was full!");
+                }
+                // once reached, drop the oldest frame
+                else {
+                    framesQueue.pop();
+                    framesQueue.push(frame.clone());
+                    ROS_DEBUG("do_capture: done pushing fram to queue. queue was okay");
+                }
+            }
+            ROS_DEBUG("do_capture: POLO: END OF do_capture NHOK BIT ");
+            ros::spinOnce();
+        }
 
-          if(!frame.empty()) {
-              ROS_DEBUG("not my lock... ");
-              std::lock_guard<std::mutex> g(q_mutex);
-              // accumulate only until max_queue_size
-              ROS_DEBUG("cleared not my LOCK");
-              if (framesQueue.size() < max_queue_size) {
-                  framesQueue.push(frame.clone());
-                  ROS_DEBUG("done pushing fram to queue, but queue was full!");
-              }
-              // once reached, drop the oldest frame
-              else {
-                  framesQueue.pop();
-                  framesQueue.push(frame.clone());
-                  ROS_DEBUG("done pushing fram to queue. queue was okay");
-              }
-          }
-          ROS_DEBUG("POLO: END OF do_capture NHOK BIT ");
+        ROS_WARN("do_capture: AM I REACHING HERE?");
+  }
+};
 
-      }
+LockableCapture::LockableCapture(bool ap) {
+  ROS_INFO("instanciated object");
+  autoplay = ap;
 
-}
+  if (autoplay){
+    playing = true;
+    boost::lock_guard<boost::mutex> lock(mut);
+    cond.notify_one();
+    ROS_INFO("Autoplay is defined. Started playing now.");
+  }
 
-bool play(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-  playing = true;
-  boost::lock_guard<boost::mutex> lock(mut);
-  cond.notify_one();
-  ROS_INFO("Started playing now.");
-  return true;
-}
-
-bool stop(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+  // we don't want it to start and play so
   playing = false;
-  boost::lock_guard<boost::mutex> lock(mut);
-  cond.notify_one();
-
-  //cond.notify_all();
-  ROS_INFO("Stopped playing.");
-  return true;
 }
 
+
+void sighand(int sig, LockableCapture* obj)
+{
+  //got a signal,, call the destructor for the queue and call it a day.
+  ROS_INFO("shutting down!");
+  delete obj;
+  ros::shutdown();
+}
 
 int main(int argc, char** argv)
 {
     // set debugging level to DEBUG
-    // if( ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug) ) {
-    //    ros::console::notifyLoggerLevelsChanged();
-    // }
+    if (DEBUG)
+    {
+      if( ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug) ) {
+         ros::console::notifyLoggerLevelsChanged();
+      }
+    }
+
     ros::init(argc, argv, "image_publisher");
     ros::NodeHandle nh;
+
     ros::NodeHandle _nh("~"); // to get the private params
     image_transport::ImageTransport it(nh);
     image_transport::CameraPublisher pub = it.advertiseCamera("camera", 1);
-    newfilepub = _nh.advertise<std_msgs::Bool>("new_file",1);
+
     std::string readnextsrvhandle;
     std::string classifiernamespace;
      _nh.param<std::string>("readnext_service_handle",readnextsrvhandle,"/readpathnode/read_next");
      _nh.param<std::string>("classifier_namespace",classifiernamespace,"");
-     _nh.param<bool>("publish_nothing_when_stopped",hardstop,true);
 
     client = _nh.serviceClient<datasetloader_ros::actvid>(readnextsrvhandle);
-    startonevid_client = _nh.serviceClient<std_srvs::Empty>(classifiernamespace+"start_vidscores");
-    stoponevid_client = _nh.serviceClient<std_srvs::Empty>(classifiernamespace+"stop_vidscores");
+    startonevid_client = _nh.serviceClient<std_srvs::Empty>("start_vidscores");
+    stoponevid_client = _nh.serviceClient<std_srvs::Empty>("stop_vidscores");
 
-    ros::ServiceServer service_play = _nh.advertiseService("play", play);
-    ros::ServiceServer service_stop = _nh.advertiseService("stop", stop);
     bool autoplay;
     _nh.param<bool>("autoplay", autoplay, true);
+
+    LockableCapture mylockablecap(autoplay);
+    LockableCapture* p;
+    // auto mysighand = [=](int sig){
+    //   ROS_INFO("shutting down!");
+    //   delete p;
+    //   ros::shutdown();
+    //  };
+    // //let's override the ros signal_shutdown and register our custom signal handler as the other thread was not being killed.
+    // signal(SIGINT, mysighand); //this is a tough one. i think it should be a class with a vector of sigterms inside and we append to it when we create an object, or something like that. Need to read upon it.
+    ros::ServiceServer service_play = _nh.advertiseService("play", &LockableCapture::play, &mylockablecap);
+    ros::ServiceServer service_stop = _nh.advertiseService("stop", &LockableCapture::stop, &mylockablecap);
+
+    ROS_INFO("autoplay %d",  mylockablecap.autoplay);
+    mylockablecap.newfilepub = _nh.advertise<std_msgs::Bool>("new_file",1);
+    _nh.param<bool>("publish_nothing_when_stopped", mylockablecap.hardstop,true);
+    ROS_INFO("hardstooop %d",mylockablecap.hardstop);
 
     double fps;
     _nh.param<double>("fps", fps, 240.0);
     ros::Rate r(fps);
 
-    if (autoplay){
-      playing = true;
-      boost::lock_guard<boost::mutex> lock(mut);
-      cond.notify_one();
-      ROS_INFO("Autoplay is defined. Started playing now.");
-    }
 
-    while (!playing){
+    while (!mylockablecap.playing){
         ROS_INFO_ONCE("Thread is locked. Not playing.");
         ros::spinOnce();
         r.sleep();
@@ -378,15 +453,15 @@ int main(int argc, char** argv)
     cam_info_msg.header = header;
 
     ROS_INFO_STREAM("Opened the stream, starting to publish.");
-    boost::thread cap_thread(do_capture, nh);
+    boost::thread cap_thread(boost::bind(&LockableCapture::do_capture, &mylockablecap, nh));
 
     while (nh.ok()) {
-      ROS_DEBUG("MARCO : BEGINNING OF mainloop NHOK BIT");
+       ROS_DEBUG("MARCO : BEGINNING OF mainloop NHOK BIT");
 
         {
             std::lock_guard<std::mutex> g(q_mutex);
-            if(hardstop&&!playing){
-              ROS_DEBUG("i'm not playing. i need to clear the current frame, or it will get published. ");
+            if(mylockablecap.hardstop&&!mylockablecap.playing){
+              // ROS_DEBUG("i'm not playing. i need to clear the current frame, or it will get published. ");
               frame.release();
               //frame = framesQueue.front();
               //or i don't need to clear the queue at all since this is an empty frame anyway....
@@ -397,26 +472,26 @@ int main(int argc, char** argv)
             else
             {
               if (!framesQueue.empty()){
-                ROS_DEBUG("quack");
+                // ROS_DEBUG("quack");
                   frame = framesQueue.front();
-                  ROS_DEBUG("dumbo");
+                  // ROS_DEBUG("dumbo");
                   framesQueue.pop();
-                  ROS_DEBUG("pop");
+                  // ROS_DEBUG("pop");
               }
             }
         }
 
         if (pub.getNumSubscribers() > 0){
-            ROS_DEBUG("which statement kills me? who is it??? ");
+            // ROS_DEBUG("which statement fails? ");
             // Check if grabbed frame is actually filled with some content
             if(!frame.empty()) {
                 // Flip the image if necessary
-                ROS_DEBUG("boobs");
+                // ROS_DEBUG("bob");
                 if (flip_image)
                     cv::flip(frame, frame, flip_value);
-                ROS_DEBUG("torpedo ");
+                // ROS_DEBUG("torpedo ");
                 msg = cv_bridge::CvImage(header, "bgr8", frame).toImageMsg();
-                ROS_DEBUG("papaya");
+                // ROS_DEBUG("papaya");
                 // Create a default camera info if we didn't get a stored one on initialization
                 if (cam_info_msg.distortion_model == ""){
                     ROS_WARN_STREAM("No calibration file given, publishing a reasonable default camera info.");
@@ -425,17 +500,20 @@ int main(int argc, char** argv)
                 }
                 // The timestamps are in sync thanks to this publisher
                   //ROS_INFO_STREAM("do i reach the publisher bit?. ");
-                  ROS_DEBUG("amoeba");
+                  // ROS_DEBUG("amoeba");
                   pub.publish(*msg, cam_info_msg, ros::Time::now());
-                  ROS_DEBUG("giant boobs ");
+                  // ROS_DEBUG("giant bob ");
 
             }
 
             ros::spinOnce();
         }
         r.sleep();
-        ROS_DEBUG("POLO : END OF mainloop NHOK BIT");
+        // ROS_DEBUG("POLO : END OF mainloop NHOK BIT");
 
     }
+    delete p;
+    // rosdebug statements will no longer work here because ros is shutdown!
+    // ROS_DEBUG("before cap_thread.join");
     cap_thread.join();
 }

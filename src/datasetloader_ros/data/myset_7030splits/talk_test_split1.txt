@@ -1,0 +1,9 @@
+talk_4.avi 1
+talk_6.avi 1
+talk_1.avi 0
+talk_8.avi 2
+talk_3.avi 1
+talk_5.avi 0
+talk_7.avi 1
+talk_0.avi 2
+talk_2.avi 1

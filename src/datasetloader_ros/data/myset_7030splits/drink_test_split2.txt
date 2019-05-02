@@ -1,0 +1,8 @@
+drink_1.avi 1
+drink_3.avi 2
+drink_4.avi 0
+drink_6.avi 1
+drink_0.avi 2
+drink_2.avi 1
+drink_5.avi 1
+drink_7.avi 0

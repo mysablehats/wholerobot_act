@@ -31,6 +31,10 @@ bool test = false;
 bool allvids = true;
 int test_numvids = 50;
 
+enum Training_Testing_Nothing {TRAINING=1, TESTING=2, NOTHING=0};
+Training_Testing_Nothing tt;
+std::string tort;
+
 class MovieFile{
 public:
   std::string File, Action, filename;
@@ -204,13 +208,13 @@ bool readsplit(datasetloader_ros::split::Request &req, datasetloader_ros::split:
             std::string movieline;
             int test_train_nothing;
             iss >> movieline >> test_train_nothing;
-            if (test_train_nothing==2)
+            if (test_train_nothing==tt) /// so 2 is apparently testing. I need to find out what training number is and add this as a variable and make another service to ask for training data
             {
-                ROS_DEBUG("%s is included for testing! doing nothing.",movieline.c_str());
+                ROS_DEBUG("%s is included for %s! doing nothing.",movieline.c_str(),tort.c_str());
             }
             else
             {
-              ROS_DEBUG("%s is member of %d, not used for testing",movieline.c_str(),test_train_nothing);
+              ROS_DEBUG("%s is member of %d, not used for %s",movieline.c_str(),test_train_nothing,tort.c_str());
               for (int i=0; i<allMovies.size();i++)
               {
                 ROS_DEBUG("%s %s",allMovies[i].filename.c_str(), movieline.c_str());
@@ -258,8 +262,23 @@ int main(int argc, char **argv) {
     ros::NodeHandle _nh("~"); // to get the private params
     _nh.getParam("basepath", basepath);
     _nh.getParam("splitdir", splitpath);
-    _nh.getParam("play_without_restricting_from_list", allvids);    
-    _nh.getParam("listylist",v);
+    _nh.getParam("play_without_restricting_from_list", allvids);
+    _nh.getParam("choose_list",v);
+
+    int ttt =2;
+    _nh.param<int>("training_or_testing",ttt,2);
+    tt = static_cast<Training_Testing_Nothing>(ttt);
+    //ROS_INFO("tt: %d",(int)tt);
+    switch (tt) {
+      case TRAINING:
+        ROS_INFO("Reading splits for TRAINING");
+        tort = "training";
+        break;
+      case TESTING:
+        ROS_INFO("Reading splits for TESTING");
+        tort = "testing";
+        break;
+    }
     if (!allvids)
     {
       for(int i=0;i < v.size();i++)
@@ -278,7 +297,7 @@ int main(int argc, char **argv) {
     ros::ServiceServer service_rs = _nh.advertiseService("read_split", readsplit);
     ROS_DEBUG("instantiated service read_split ");
 
-    labels = _nh.advertise<std_msgs::String>("y",100);
+    labels = _nh.advertise<std_msgs::String>("y",100, true); /// it will be latching so we can avoid the Nones
     done = _nh.advertise<std_msgs::String>("done",100);
 
     ROS_INFO("defined publisher for y and done.");

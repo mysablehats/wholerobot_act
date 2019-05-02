@@ -1,5 +1,5 @@
 <launch>
   <include file="$(find datasetloader_ros)/launch/rn_srv.launch">
-    <arg name="testing" value="true"/>
+    <arg name="test" value="true"/>
   </include>
 </launch>

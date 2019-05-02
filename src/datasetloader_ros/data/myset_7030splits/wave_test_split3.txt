@@ -1,0 +1,10 @@
+wave_4.avi 1
+wave_6.avi 1
+wave_8.avi 1
+wave_1.avi 1
+wave_3.avi 2
+wave_5.avi 1
+wave_7.avi 2
+wave_0.avi 1
+wave_9.avi 2
+wave_2.avi 0

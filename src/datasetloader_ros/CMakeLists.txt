@@ -56,6 +56,10 @@ add_executable(vss src/vsmf_srv.cpp)
 add_dependencies(vss datasetloader_ros_generate_messages_cpp)
 target_link_libraries(vss ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
+#add_executable(vss2 src/vsmf_srv2.cpp)
+#add_dependencies(vss2 datasetloader_ros_generate_messages_cpp)
+#target_link_libraries(vss2 ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
 add_executable(readpathsrv src/readpathv_service.cpp)
 add_dependencies(readpathsrv ${catkin_EXPORTED_TARGETS} datasetloader_ros_generate_messages_cpp)
 target_link_libraries(readpathsrv ${catkin_LIBRARIES} ${Boost_LIBRARIES})

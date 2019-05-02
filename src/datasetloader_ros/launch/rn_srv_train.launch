@@ -1,0 +1,10 @@
+<launch>
+  <include file="$(find datasetloader_ros)/launch/rn_srv.launch">
+    <arg name="test" value="false"/>
+
+    <!-- training = 1, testing = 2  -->
+    <arg name="training_or_testing" value="1"/>
+    <arg name="datasetname" default="hmdb51"/>
+
+  </include>
+</launch>

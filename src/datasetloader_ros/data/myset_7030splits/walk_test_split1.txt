@@ -1,0 +1,6 @@
+walk_4.avi 1
+walk_1.avi 2
+walk_3.avi 0
+walk_5.avi 1
+walk_0.avi 1
+walk_2.avi 0
