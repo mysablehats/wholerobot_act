@@ -21,7 +21,7 @@ class TGatherer(Gatherer):
     def __init__(self,**kwargs):
         print('initializing TGatherer')
         self.ss = rospy.Service('show_cf', std_srvs.srv.Empty,self.calccf)
-        self.ssp = rospy.ServiceProxy('_show_gatherer', std_srvs.srv.Empty)
+        self.ssp = rospy.ServiceProxy('show_gatherer', std_srvs.srv.Empty)
         self.cnf_matrix = None
         super(TGatherer,self).__init__(**kwargs) ###somthing like this.
 
@@ -63,7 +63,7 @@ class TGatherer_wrap(Gatherer_wrap):
         print('initializing TGatherer_wrap')
 
         super(TGatherer_wrap,self).__init__(name, y_type=String, yhat_type=Float32MultiArray)
-        self.showsrv = rospy.Service('_show_%s'%self.name, std_srvs.srv.Empty,self.showcf)
+        self.showsrv = rospy.Service('show_%s'%self.name, std_srvs.srv.Empty,self.showcf)
         self.blocksrv = rospy.Service('block', std_srvs.srv.Empty,self.block)
 
     def block(self,req):

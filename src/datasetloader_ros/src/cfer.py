@@ -52,10 +52,10 @@ def plot_confusion_matrix(cm, classes,
     plt.tight_layout()
 
 class CfGatherer(Gatherer):
-    def __init__(self):
-        super(CFGatherer,self).__init__(y_type=String,yhat_type=String) ###somthing like this.
+    def __init__(self,**kwargs):
+        super(CfGatherer,self).__init__(**kwargs) ###somthing like this.
         self.ss = rospy.Service('show_cf', std_srvs.srv.Empty,self.calccf)
-        self.ssp = rospy.ServiceProxy('_show_gatherer', std_srvs.srv.Empty)
+        self.ssp = rospy.ServiceProxy('show_gatherer', std_srvs.srv.Empty)
         self.cnf_matrix = None
 
     def calccf(self, req):
@@ -72,23 +72,25 @@ class CfGatherer(Gatherer):
                 y_test[i] = "unknown"
             if y_pred[i] == None:
                 y_pred[i] = "unknown"
-        print("ypred:")
-        print(y_pred)
-        print("ytest:")
-        print(y_test)
+        rospy.logdebug("ypred:")
+        rospy.logdebug(y_pred)
+        rospy.logdebug("ytest:")
+        rospy.logdebug(y_test)
         self.cnf_matrix = confusion_matrix(y_test, y_pred, labels=self.classes)
         self.ssp()
         rospy.loginfo('done calculating and showing confusion matrix!')
         return []
     def __del__(self):
         self.ssp.close()
-        super(CFGatherer,self).__del__() ###
+        super(CfGatherer,self).__del__() ###
 
 
 class CfGatherer_wrap(Gatherer_wrap):
     def __init__(self,name):
-        super(CfGatherer_wrap,self).__init__(y_type=String,yhat_type=String)
-        self.showsrv = rospy.Service('_show_%s'%self.name, std_srvs.srv.Empty,self.showcf)
+        super(CfGatherer_wrap,self).__init__(name, y_type=String,yhat_type=String)
+        self.showsrv = rospy.Service('show_gatherer', std_srvs.srv.Empty,self.showcf)
+        #I forgot about a name variable here. wouldn't want to change the whole thing, so now it is just gatherer...
+        # self.showsrv = rospy.Service('show_%s'%self.name, std_srvs.srv.Empty,self.showcf)
         self.blocksrv = rospy.Service('block', std_srvs.srv.Empty,self.block)
 
     def block(self,req):

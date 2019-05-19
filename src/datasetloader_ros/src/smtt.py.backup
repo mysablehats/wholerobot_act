@@ -8,30 +8,25 @@ from std_msgs.msg import String, Float32MultiArray, MultiArrayDimension
 #import os
 import subprocess
 
-class OutStreamWrapper():
-    def __init__(self, datasetname, iscf):
+class myproc():
+    def __init__(self, datasetname):
         self.init_toter_h_list = []
         self.showv_toter_h_list = []
         self.save_toter_h_list = []
         self.del_toter_h_list = []
         self.subprocesses = []
-        self.iscf = iscf
         self.datasetname = datasetname
-    def add_outstream(self,outstream,tot,i,output):
+    def add_guy(self,guy,tot,i):
         thissubprocess = subprocess.Popen(["roslaunch","datasetloader_ros",
-        "%ser_ns.launch"%(tot),"namespace:=/{}/split_{}".format(outstream,i),
-        "filenamesux:={}_{}_split_{}".format(output,outstream,i),
-        "dataset:={}".format(self.datasetname),"y_hat_input:=/{}/{}".format(outstream,output)])
+        "%ser_ns.launch"%(tot),"namespace:=/{}/split_{}".format(guy,i),
+        "filenamesux:={}split_{}".format(guy,i),
+        "dataset:={}".format(self.datasetname),"y_hat_input:=/{}/scores".format(guy)])
         self.subprocesses.append(thissubprocess)
-        init_toter_h = rospy.ServiceProxy('/{}/split_{}/init_{}er'.format(outstream,i,tot), Empty)
-        ### this is hacky. theoretically there should be another service here!
-        if self.iscf:
-            showv_toter_h = rospy.ServiceProxy('/{}/split_{}/show_cf'.format(outstream,i), Empty)
-        else:
-            showv_toter_h = rospy.ServiceProxy('/{}/split_{}/show_gt'.format(outstream,i), Empty)
-        save_toter_h = rospy.ServiceProxy('/{}/split_{}/save_gt'.format(outstream,i), Empty)
-        del_toter_h = rospy.ServiceProxy('/{}/split_{}/del_{}er'.format(outstream,i,tot), Empty)
-        rospy.wait_for_service('/{}/split_{}/init_{}er'.format(outstream,i,tot))
+        init_toter_h = rospy.ServiceProxy('/{}/split_{}/init_{}er'.format(guy,i,tot), Empty)
+        showv_toter_h = rospy.ServiceProxy('/{}/split_{}/show_gt'.format(guy,i), Empty)
+        save_toter_h = rospy.ServiceProxy('/{}/split_{}/save_gt'.format(guy,i), Empty)
+        del_toter_h = rospy.ServiceProxy('/{}/split_{}/del_{}er'.format(guy,i,tot), Empty)
+        rospy.wait_for_service('/{}/split_{}/init_{}er'.format(guy,i,tot))
         self.init_toter_h_list.append(init_toter_h)
         self.showv_toter_h_list.append(showv_toter_h)
         self.save_toter_h_list.append(save_toter_h)
@@ -71,16 +66,6 @@ class statemachine():
         ### things are launched
         #now I need to send a service call to load split 1
         rospy.loginfo('started')
-        ### decides what results we will log
-        if tot == 'train' or tot == 'test':
-            # self.output = 'scores'
-            self.iscf = False
-        elif tot == 'cf':
-            # self.output = 'action'
-            self.iscf = True
-        self.output = rospy.get_param('~output','undefined')
-        assert self.output is not 'undefined'
-        rospy.loginfo('output set to %s'%self.output)
         self.done = False
         rospy.wait_for_service('/readpathnode/read_split')
         rospy.loginfo('service read_split okay')
@@ -118,18 +103,9 @@ class statemachine():
             time.sleep(3)
             rospy.loginfo('playing')
             self.play_h()
-            flowname = rospy.resolve_name('/flow/%s'%self.output)
-            rgbname = rospy.resolve_name('/rgb/%s'%self.output)
-            rospy.loginfo('waiting for tsn_caffe to be alive: expecting responses from %s,%s'%(rgbname,flowname))
-
-            ### i could do a custom import here, OR load all the modules I might use and then select them here with a parameter??
-
-            if self.iscf:
-                rospy.wait_for_message(flowname, String)
-                rospy.wait_for_message(rgbname, String)
-            else:
-                rospy.wait_for_message(flowname, Float32MultiArray)
-                rospy.wait_for_message(rgbname, Float32MultiArray)
+            rospy.loginfo('waiting for tsn_caffe to be alive')
+            rospy.wait_for_message('/flow/scores', Float32MultiArray)
+            rospy.wait_for_message('/rgb/scores', Float32MultiArray)
             flowr = rospy.ServiceProxy('/flow/reconf_split', caffe_tsn_ros.srv.split)
             rgbr = rospy.ServiceProxy('/rgb/reconf_split', caffe_tsn_ros.srv.split)
 
@@ -144,43 +120,35 @@ class statemachine():
                 rospy.loginfo('reloaded splits!')
                 ##we need to reload the split from the classifier as well
                 ###arg....
-                thisOutStreamWrapper = OutStreamWrapper(self.datasetname,self.iscf)
+                thisproc = myproc(self.datasetname)
                 for rof in ['rgb','flow']:
                     rospy.loginfo('choosing '+rof +' services and adding them')
 
-                    self.subprocesses.append(thisOutStreamWrapper.add_outstream(rof,tot,i,self.output))
+                    self.subprocesses.append(thisproc.add_guy(rof,tot,i))
 
                 self.s_h(i)
                 time.sleep(3)
                 rospy.loginfo('initializing %ser'%tot)
-                thisOutStreamWrapper.initt()
+                thisproc.initt()
                 rospy.loginfo('playing until done')
                 self.play_h()
                 while not self.done:
                     time.sleep(1)
                     try:
-                        if not self.iscf:
-                            thisOutStreamWrapper.showv()
-                        else:
-                            pass
-                            #print('not showing output because it is a cfer instance. i''m still working though.')
+                        thisproc.showv()
                     except:
                         print('could not show. wonder why')
                 if self.done:
                     rospy.loginfo('showing gathered data')
                     #show_toter_h()
-                    if self.iscf:
-                        thisOutStreamWrapper.showv() ### I highjacked this service,, theore
-                    else:
-                        pass
-                    thisOutStreamWrapper.save()
-                    thisOutStreamWrapper.delt()
+                    thisproc.save()
+                    thisproc.delt()
                     self.done = False
                     # init_toter_h.close()
                     # #show_toter_h.close()
                     # save_toter_h.close()
                     # del_toter_h.close()
-                    thisOutStreamWrapper.close()
+                    thisproc.close()
                     ## maybe get a handle for the popen and do a popen.kill()/popen.terminate() ?
 
             ###after everything finishes, block them plots!
@@ -215,6 +183,5 @@ if __name__ == '__main__':
         statemachine('train')
         while not rospy.is_shutdown():
             rospy.spin()
-    except rospy.ROSInterruptException as e:
-
-        print(e)
+    except rospy.ROSInterruptException:
+        pass

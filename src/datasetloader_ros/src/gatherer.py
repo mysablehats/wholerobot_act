@@ -32,7 +32,9 @@ class Gatherer(object):
     def __init__(self, y_type=String, yhat_type=String):
         self.gfile = os.path.expanduser(rospy.get_param('~glistfile','~/my_gatherer_file'))
         self.synch_appending = rospy.get_param('~synch_appending',False)
-        self.classes = eval(rospy.get_param('~classes','["something","something_else"]'))
+        # self.classes = eval(rospy.get_param('~classes','["something","something_else"]'))
+        self.classes = rospy.get_param('~classes',["something","something_else"])
+
         rospy.loginfo('Gatherer initialized')
         assert type(self.classes) == list
         rate_value = rospy.get_param('~rate',5)
@@ -43,6 +45,7 @@ class Gatherer(object):
         self.sg = rospy.Service('save_gt', std_srvs.srv.Empty,self.savegt)
         self.ssg = rospy.Service('show_gt', std_srvs.srv.Empty,self.showgt)
 
+        self.namespace = rospy.get_param('~namespace','')
         self.dopickle = True
         self.saveastxt = True
 

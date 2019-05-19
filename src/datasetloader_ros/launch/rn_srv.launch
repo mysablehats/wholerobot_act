@@ -24,7 +24,7 @@
     <rosparam subst_value="true" param="play_without_restricting_from_list">$(arg play_without_restricting_from_list)</rosparam>
     <!-- this is kind of hacky, so to change the choose list you either need to load it from a yaml file in the right context and then comment this out, or change it here -->
     <group unless="$(arg play_without_restricting_from_list)">
-      <rosparam param="choose_list">["dive","hug","jump"]</rosparam>
+      <rosparam param="choose_list">['brush_hair','chew','clap','drink','eat','jump','pick','pour','sit','smile','stand','talk','walk','wave']</rosparam>
     </group>
   </group>
 

@@ -1,5 +1,7 @@
 <?xml version="1.0"?>
  <launch>
+   <arg name="dataset" default="hmdb51"/>
    <node name="statemachine" pkg="datasetloader_ros" type="state_machine.py" respawn="false" output="screen">
+     <param name="dataset" value="$(arg dataset)"/>
    </node>
  </launch>

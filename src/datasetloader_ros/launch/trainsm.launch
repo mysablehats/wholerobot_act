@@ -1,7 +1,9 @@
 <?xml version="1.0"?>
- <launch>
-   <arg name="dataset" default="hmdb51"/>
-   <node name="statemachine" pkg="datasetloader_ros" type="state_machine_train.py" respawn="false" output="screen">
-     <param name="dataset" value="$(arg dataset)"/>
-   </node>
- </launch>
+<launch>
+  <arg name="dataset" default="hmdb51"/>
+  <arg name="output" default="scores"/>
+  <node name="statemachine" pkg="datasetloader_ros" type="state_machine_train.py" respawn="false" output="screen">
+    <param name="dataset" value="$(arg dataset)"/>
+    <param name="output" value="$(arg output)"/>
+  </node>
+</launch>

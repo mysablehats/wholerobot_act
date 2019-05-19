@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+ <launch>
+   <arg name="rosmastername" default="SATELLITE-S50-B"/>
+   <arg name="img_" default="/videofiles/image_raw"/>
+   <!-- either conv.launch or cf_remote.launch -->
+   <arg name="nodetype" default="conv.launch"/>
+   <machine name="tsn_denseflow" address="tsn_denseflow" user="root" password="ros_ros" env-loader="/catkin_ws/src/dense_flow/env.sh $(arg rosmastername)" ssh-port="22"/>
+   <node name="df_node" machine="tsn_denseflow" pkg="dense_flow" type="flowbg" respawn="false" output="log" required="true">
+     <param name="save_images" value="false"/>
+     <param name="xFlowFile" value="/dense_flow/flow_x"/>
+     <param name="yFlowFile" value="/dense_flow/flow_y"/>
+     <param name="imgFile" value="/dense_flow/img"/>
+
+     <param name="bound" value="20"/>
+     <param name="type" value="tvl1"/> <!--farn, tvl1, brox  -->
+     <param name="device_id" value="0"/>
+     <param name="step" value="1"/>
+     <param name="new_height" value="256"/>
+     <param name="new_width" value="340"/>
+
+     <param name="read_topic" value="$(arg img_)"/>
+
+   </node>
+
+   <arg name="split" default="1"/>
+   <arg name="cfw" default="50"/>
+   <group>
+     <arg name="rgbOrFlow" default="rgb"/>
+       <arg if="$(eval rgbOrFlow =='rgb' )" name="img" default="/df_node/image"/>
+       <arg if="$(eval rgbOrFlow =='flow')" name="img" default="/df_node/flow_xy"/>
+       <machine name="tsn_caffe" address="tsn_caffe" user="root" password="ros_ros" env-loader="/temporal-segment-networks/catkin_ws/src/caffe_tsn_ros/env.sh $(arg rosmastername)" ssh-port="22"/>
+       <group ns="$(arg rgbOrFlow)">
+           <include file="$(find caffe_tsn_ros)/launch/$(arg nodetype)">
+             <arg name="machine" value="tsn_caffe"/>
+             <arg name="img" value="$(arg img)"/>
+             <arg name="rgbOrFlow" value="$(arg rgbOrFlow)"/>
+             <arg name="split" value="$(arg split)"/>
+             <arg name="cfw" value="$(arg cfw)"/>
+           </include>
+       </group>
+   </group>
+
+
+   <group>
+     <arg name="rgbOrFlow" default="flow"/>
+       <arg if="$(eval rgbOrFlow =='rgb' )" name="img" default="/df_node/image"/>
+       <arg if="$(eval rgbOrFlow =='flow')" name="img" default="/df_node/flow_xy"/>
+       <machine name="tsn_caffe" address="tsn_caffe" user="root" password="ros_ros" env-loader="/temporal-segment-networks/catkin_ws/src/caffe_tsn_ros/env.sh $(arg rosmastername)" ssh-port="22"/>
+       <group ns="$(arg rgbOrFlow)">
+           <include file="$(find caffe_tsn_ros)/launch/$(arg nodetype)">
+             <arg name="machine" value="tsn_caffe"/>
+             <arg name="img" value="$(arg img)"/>
+             <arg name="rgbOrFlow" value="$(arg rgbOrFlow)"/>
+             <arg name="split" value="$(arg split)"/>
+             <arg name="cfw" value="$(arg cfw)"/>
+           </include>
+       </group>
+   </group>
+
+ </launch>

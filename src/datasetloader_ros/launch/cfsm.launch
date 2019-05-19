@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+ <launch>
+   <arg name="dataset" default="hmdb51"/>
+   <!-- <arg name="output" default="action"/> -->
+   <arg name="output" default="action_own"/>
+
+   <node name="statemachine" pkg="datasetloader_ros" type="state_machine_cf.py" respawn="false" output="screen">
+     <param name="dataset" value="$(arg dataset)"/>
+     <param name="output" value="$(arg output)"/>
+   </node>
+ </launch>

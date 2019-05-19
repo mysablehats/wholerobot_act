@@ -1,10 +1,15 @@
 <launch>
+  <arg name="datasetname" default="hmdb51"/>
+  <arg name="play_without_restricting_from_list" default="false"/>
+  <arg name="test" default="false"/>
+
   <include file="$(find datasetloader_ros)/launch/rn_srv.launch">
-    <arg name="test" value="false"/>
+    <arg name="test" value="$(arg test)"/>
 
     <!-- training = 1, testing = 2  -->
     <arg name="training_or_testing" value="1"/>
-    <arg name="datasetname" default="hmdb51"/>
+    <arg name="datasetname" default="$(arg datasetname)"/>
+    <arg name="play_without_restricting_from_list" default="$(arg play_without_restricting_from_list)"/>
 
   </include>
 </launch>
