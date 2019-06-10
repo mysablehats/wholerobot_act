@@ -7,6 +7,9 @@
    <node name="tester" pkg="datasetloader_ros" type="cfer.py" respawn="false" output="screen" ns="$(arg namespace)">
      <param name="glistfile" value="/mnt/externaldrive/var/datasets/$(arg dataset)/test_$(arg filenamesux)"/>
      <param name="tot" value="test"/>
+     <!-- Float32MultiArray , String, caffe_tsn_ros.msg.ScoreArray  -->
+     <param name="yhat_type" value="String"/>
+     <param name="y_type" value="String"/>
      <remap from="y_hat_topic" to="$(arg y_hat_input)"/>
      <remap from="y_topic" to="/readpathnode/y"/>
      <remap from="done_topic" to="/readpathnode/done"/>

@@ -28,6 +28,18 @@ except:
 from std_msgs.msg import String
 import std_srvs.srv
 
+def gettype(message_type_str):
+    ### thanks to stackexchange and python docs:
+    assert type(message_type_str) == type('')
+    sep = '.'
+    aa = message_type_str.split(sep)
+    package = sep.join(aa[0:-1])
+    name = aa[-1]
+    rospy.logwarn("Custom variable import!!")
+    rospy.logwarn("trying to load %s from package: %s"%(name,package))
+    mytype = getattr(__import__(package, fromlist=[name]),name)
+    return mytype
+
 class Gatherer(object):
     def __init__(self, y_type=String, yhat_type=String):
         self.gfile = os.path.expanduser(rospy.get_param('~glistfile','~/my_gatherer_file'))
@@ -116,15 +128,28 @@ class Gatherer(object):
         return []
 
 class Gatherer_wrap(object):
-    def __init__(self,name, y_type=String, yhat_type=String):
+    def __init__(self,name):
         print('initializing Gatherer %s'%name)
-        rospy.init_node(name, anonymous=True)
+        rospy.init_node(name, anonymous=True, log_level=rospy.INFO)
+        # rospy.init_node(name, anonymous=True, log_level=rospy.DEBUG)
+
         self.name = name
         self.initsrv = rospy.Service('init_%s'%self.name, std_srvs.srv.Empty,self.initgt)
         self.delsrv = rospy.Service('del_%s'%self.name, std_srvs.srv.Empty,self.cleargt)
         self.mygatherer = None
-        self.y_type = y_type
-        self.yhat_type = yhat_type
+        #instead of this,,, what about
+        if 0:
+            self.y_type = y_type
+            self.yhat_type = yhat_type
+        else: #this:
+            y_type_str = rospy.get_param('~y_type')
+            yhat_type_str = rospy.get_param('~yhat_type')
+
+            y_type = gettype(y_type_str)
+            yhat_type = gettype(yhat_type_str)
+
+            self.y_type = y_type
+            self.yhat_type = yhat_type
 
     def initgt(self,req):
         if self.mygatherer:

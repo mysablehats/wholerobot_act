@@ -8,7 +8,7 @@
   <!-- Set test to "true" to get only the first <test_numvids> videos and check stuff... -->
   <arg name="test" default="false"/>
   <!-- number of videos that will be played if testing flag is on -->
-  <arg name="test_numvids" default="3" />
+  <arg name="test_numvids" default="30" />
   <!--if true will ignore choose_list  -->
   <arg name="play_without_restricting_from_list" default="true"/>
 

@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 #from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix
 
-from std_msgs.msg import String, Float32MultiArray, MultiArrayDimension
+from std_msgs.msg import String, Float32MultiArray, MultiArrayDimension ###outdated. i am using importlib to import only what I need!
 import std_srvs.srv
 
 from gatherer import Gatherer, Gatherer_wrap
@@ -62,7 +62,7 @@ class TGatherer_wrap(Gatherer_wrap):
     def __init__(self,name):
         print('initializing TGatherer_wrap')
 
-        super(TGatherer_wrap,self).__init__(name, y_type=String, yhat_type=Float32MultiArray)
+        super(TGatherer_wrap,self).__init__(name)
         self.showsrv = rospy.Service('show_%s'%self.name, std_srvs.srv.Empty,self.showcf)
         self.blocksrv = rospy.Service('block', std_srvs.srv.Empty,self.block)
 

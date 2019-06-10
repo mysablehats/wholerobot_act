@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+ <launch>
+   <arg name="namespace" default="" />
+   <arg name="dataset" default="hmdb51"/>
+   <arg name="y_hat_input"/>
+   <arg name="filenamesux" default="$(arg namespace)"/>
+   <arg name="node_type"/>
+   <arg name="innertotsetting"/>
+   <arg name="yhat_type"/>
+   <arg name="y_type"/>
+   <node name="$(arg node_type)er_node" pkg="datasetloader_ros" type="$(arg node_type)er.py" respawn="false" output="screen" ns="$(arg namespace)">
+     <param name="glistfile" value="/mnt/externaldrive/var/datasets/$(arg dataset)/$(arg dataset)$(arg innertotsetting)$(arg filenamesux)"/>
+     <param name="tot" value="$(arg innertotsetting)"/>
+     <!-- Float32MultiArray , String, caffe_tsn_ros.msg.ScoreArray  -->
+     <param name="yhat_type" value="$(arg yhat_type)"/>
+     <param name="y_type" value="$(arg y_type)"/>
+     <remap from="y_hat_topic" to="$(arg y_hat_input)"/>
+     <remap from="y_topic" to="/readpathnode/y"/>
+     <remap from="done_topic" to="/readpathnode/done"/>
+     <param name="synch_appending" type="bool" value="True"/>
+     <param name="namespace" value="$(arg namespace)"/>
+
+<!-- this is going to be interesting to implement! -->
+     <!-- <remap from="~classes" to="/readpathnode/choose_list"/> -->
+     <rosparam param="classes">['brush_hair', 'cartwheel', 'catch', 'chew', 'clap', 'climb', 'climb_stairs', 'dive', 'draw_sword', 'dribble', 'drink', 'eat', 'fall_floor', 'fencing', 'flic_flac', 'golf', 'handstand', 'hit', 'hug', 'jump', 'kick','kick_ball', 'kiss', 'laugh', 'pick', 'pour', 'pullup', 'punch', 'push', 'pushup', 'ride_bike', 'ride_horse', 'run', 'shake_hands', 'shoot_ball', 'shoot_bow', 'shoot_gun', 'sit', 'situp', 'smile', 'smoke', 'somesault', 'stand', 'swing_baseball', 'sword', 'sword_exercise', 'talk', 'throw', 'turn', 'walk', 'wave', 'unknown']</rosparam>
+     <param name="rate" value="1"/>
+   </node>
+ </launch>

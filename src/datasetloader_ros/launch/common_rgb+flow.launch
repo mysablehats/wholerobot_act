@@ -23,7 +23,15 @@
    </node>
 
    <arg name="split" default="1"/>
-   <arg name="cfw" default="50"/>
+   <arg name="cfw" default="3"/>
+   <!-- cfw will be run on top of step, so the real number of frames will be
+   cfw*step (usually 6). to guarantee that every video will have at least one
+   fw, this cannot be higher than 5 for 30fps, if clear_fw_after_new_vid == True.
+    note that disabling clear_fw_after_new_vid is very unrealistic; it would be
+    akin to have the person repeat the task in a completely different way and
+    classify it again.
+    however df_node is publishing @26fps, with drops all the way until 19fps!!
+    so cfw can be at most 3! -->
    <group>
      <arg name="rgbOrFlow" default="rgb"/>
        <arg if="$(eval rgbOrFlow =='rgb' )" name="img" default="/df_node/image"/>

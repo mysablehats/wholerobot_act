@@ -1,31 +1,50 @@
 #!/usr/bin/env python
 import rospy
 import time
-from datasetloader_ros.srv import *
-from std_srvs.srv import Empty
-import caffe_tsn_ros.srv
-from std_msgs.msg import String, Float32MultiArray, MultiArrayDimension
-#import os
 import subprocess
 
+from std_srvs.srv import Empty
+from std_msgs.msg import String
+#from std_msgs.msg import String, Float32MultiArray, MultiArrayDimension
+#import os
+import caffe_tsn_ros.srv
+from datasetloader_ros.srv import *
+from gatherer import gettype
+
 class OutStreamWrapper():
-    def __init__(self, datasetname, iscf):
+    def __init__(self, datasetname, yhat_type, y_type):
         self.init_toter_h_list = []
         self.showv_toter_h_list = []
         self.save_toter_h_list = []
         self.del_toter_h_list = []
         self.subprocesses = []
-        self.iscf = iscf
+        self.yhat_type = yhat_type
+        self.y_type = y_type
         self.datasetname = datasetname
     def add_outstream(self,outstream,tot,i,output):
-        thissubprocess = subprocess.Popen(["roslaunch","datasetloader_ros",
-        "%ser_ns.launch"%(tot),"namespace:=/{}/split_{}".format(outstream,i),
+        launchername = "ttc_ns.launch.xml"
+
+        if tot == 'cf' or tot == 'test':
+            innertotsetting = 'test'
+        elif tot == 'train':
+            innertotsetting = tot
+        else:
+            innertotsetting = tot
+            rospy.logwarn('tot is ''%s''. neither ''test'' ''cf'' or ''train''. I will probably crash!'%tot)
+
+        thissubprocess = subprocess.Popen(["roslaunch","datasetloader_ros",launchername,
+        "node_type:=%s"%(tot),
+        "innertotsetting:=%s"%innertotsetting,
+        "namespace:=/{}/split_{}".format(outstream,i),
         "filenamesux:={}_{}_split_{}".format(output,outstream,i),
-        "dataset:={}".format(self.datasetname),"y_hat_input:=/{}/{}".format(outstream,output)])
+        "dataset:={}".format(self.datasetname),
+        "y_type:={}".format(self.y_type), ### premature optimization...
+        "yhat_type:={}".format(self.yhat_type),
+        "y_hat_input:=/{}/{}".format(outstream,output)])
         self.subprocesses.append(thissubprocess)
         init_toter_h = rospy.ServiceProxy('/{}/split_{}/init_{}er'.format(outstream,i,tot), Empty)
         ### this is hacky. theoretically there should be another service here!
-        if self.iscf:
+        if tot == 'cf':
             showv_toter_h = rospy.ServiceProxy('/{}/split_{}/show_cf'.format(outstream,i), Empty)
         else:
             showv_toter_h = rospy.ServiceProxy('/{}/split_{}/show_gt'.format(outstream,i), Empty)
@@ -72,15 +91,19 @@ class statemachine():
         #now I need to send a service call to load split 1
         rospy.loginfo('started')
         ### decides what results we will log
-        if tot == 'train' or tot == 'test':
-            # self.output = 'scores'
-            self.iscf = False
-        elif tot == 'cf':
-            # self.output = 'action'
-            self.iscf = True
+        # if tot == 'train' or tot == 'test':
+        #     # self.output = 'scores'
+        #     self.iscf = False
+        # elif tot == 'cf':
+        #     # self.output = 'action'
+        #     self.iscf = True
         self.output = rospy.get_param('~output','undefined')
         assert self.output is not 'undefined'
         rospy.loginfo('output set to %s'%self.output)
+        self.yhat_type_str = rospy.get_param('~yhat_type')
+        self.yhat_type = gettype(self.yhat_type_str)
+        self.y_type_str = rospy.get_param('~y_type')
+        self.y_type = gettype(self.y_type_str)
         self.done = False
         rospy.wait_for_service('/readpathnode/read_split')
         rospy.loginfo('service read_split okay')
@@ -124,12 +147,15 @@ class statemachine():
 
             ### i could do a custom import here, OR load all the modules I might use and then select them here with a parameter??
 
-            if self.iscf:
-                rospy.wait_for_message(flowname, String)
-                rospy.wait_for_message(rgbname, String)
-            else:
-                rospy.wait_for_message(flowname, Float32MultiArray)
-                rospy.wait_for_message(rgbname, Float32MultiArray)
+            # if self.iscf:
+            #     rospy.wait_for_message(flowname, String)
+            #     rospy.wait_for_message(rgbname, String)
+            # else:
+            #     rospy.wait_for_message(flowname, Float32MultiArray)
+            #     rospy.wait_for_message(rgbname, Float32MultiArray)
+            rospy.wait_for_message(flowname, self.yhat_type)
+            rospy.wait_for_message(rgbname, self.yhat_type)
+
             flowr = rospy.ServiceProxy('/flow/reconf_split', caffe_tsn_ros.srv.split)
             rgbr = rospy.ServiceProxy('/rgb/reconf_split', caffe_tsn_ros.srv.split)
 
@@ -144,7 +170,9 @@ class statemachine():
                 rospy.loginfo('reloaded splits!')
                 ##we need to reload the split from the classifier as well
                 ###arg....
-                thisOutStreamWrapper = OutStreamWrapper(self.datasetname,self.iscf)
+                thisOutStreamWrapper = OutStreamWrapper(self.datasetname,
+                                                        self.yhat_type_str,
+                                                        self.y_type_str)#,self.iscf)
                 for rof in ['rgb','flow']:
                     rospy.loginfo('choosing '+rof +' services and adding them')
 
@@ -159,17 +187,19 @@ class statemachine():
                 while not self.done:
                     time.sleep(1)
                     try:
-                        if not self.iscf:
+                        # if not self.iscf:
+                        if not tot == 'cf':
                             thisOutStreamWrapper.showv()
-                        else:
-                            pass
-                            #print('not showing output because it is a cfer instance. i''m still working though.')
+                        # else:
+                        #     pass
+                        #     #print('not showing output because it is a cfer instance. i''m still working though.')
                     except:
                         print('could not show. wonder why')
                 if self.done:
                     rospy.loginfo('showing gathered data')
                     #show_toter_h()
-                    if self.iscf:
+                    #if self.iscf:
+                    if tot == 'cf':
                         thisOutStreamWrapper.showv() ### I highjacked this service,, theore
                     else:
                         pass
