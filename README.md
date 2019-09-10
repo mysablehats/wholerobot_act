@@ -1,4 +1,7 @@
-# wholerobot_act
+# ROSMASTER package
 
-there used to be a lot of packages here, but now it is just one. this used to be a wrapper for gitmodules and stuff. should have probably just ditched this and started a new workspace with a single package, but this is how I did it...
-Kind of in a time crunch here really.
+This package contains the general state machine and packages necessary to launch the different ROS docker containers. 
+
+## TODO
+
+- this should probably be split into sub-packages and dependencies made explicit
