@@ -1,9 +1,11 @@
 <?xml version="1.0"?>
 <launch>
   <arg name="dataset" default="hmdb51"/>
-  <arg name="output" default="scores"/>
+  <arg name="output" default="scores_own"/>
   <node name="statemachine" pkg="datasetloader_ros" type="state_machine_test.py" respawn="false" output="screen">
     <param name="dataset" value="$(arg dataset)"/>
     <param name="output" value="$(arg output)"/>
+    <param name="yhat_type" value="caffe_tsn_ros.msg.ScoreArray"/>
+    <param name="y_type" value="std_msgs.msg.String"/>
   </node>
 </launch>

@@ -9,7 +9,8 @@
    <arg name="yhat_type"/>
    <arg name="y_type"/>
    <node name="$(arg node_type)er_node" pkg="datasetloader_ros" type="$(arg node_type)er.py" respawn="false" output="screen" ns="$(arg namespace)">
-     <param name="glistfile" value="/mnt/externaldrive/var/datasets/$(arg dataset)/$(arg dataset)$(arg innertotsetting)$(arg filenamesux)"/>
+     <param name="glistfile" value="/run/user/1000/gvfs/smb-share:server=10.0.0.7,share=share/ar/datasets/df_per_action//$(arg dataset)$(arg innertotsetting)$(arg filenamesux)"/>
+     <!-- <param name="glistfile" value="/mnt/externaldrive/var/datasets/$(arg dataset)/$(arg dataset)$(arg innertotsetting)$(arg filenamesux)"/> -->
      <param name="tot" value="$(arg innertotsetting)"/>
      <!-- Float32MultiArray , String, caffe_tsn_ros.msg.ScoreArray  -->
      <param name="yhat_type" value="$(arg yhat_type)"/>

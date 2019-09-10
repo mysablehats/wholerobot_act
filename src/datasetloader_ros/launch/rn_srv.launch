@@ -11,6 +11,7 @@
   <arg name="test_numvids" default="30" />
   <!--if true will ignore choose_list  -->
   <arg name="play_without_restricting_from_list" default="true"/>
+  <arg name="basepath" default="/run/user/1000/gvfs/smb-share:server=10.0.0.7,share=share/ar/videos"/>
 
 <!-- loads the parameters for the would be node readpathnode -->
 
@@ -31,20 +32,20 @@
   <!-- SPECIFIC -->
   <!-- HMDB51 -->
   <node pkg="datasetloader_ros" type="readpathsrv" name="readpathnode" output="screen" if="$(eval datasetname=='hmdb51')">
-    <param name="basepath" value="/mnt/externaldrive/var/datasets/videos/" />
+    <param name="basepath" value="$(arg basepath)/hmdb51" />
     <param name="splitdir" value="$(find datasetloader_ros)/data/hmdb51_7030splits"/>
   </node>
 
   <!-- MYSET -->
   <node pkg="datasetloader_ros" type="readpathsrv" name="readpathnode" output="screen" if="$(eval datasetname=='myset')">
-    <param name="basepath" value="/mnt/externaldrive/var/datasets/myset/" />
+    <param name="basepath" value="$(arg basepath)/myset/" />
     <param name="splitdir" value="$(find datasetloader_ros)/data/myset_7030splits"/>
   </node>
 
   <!-- FC101 -->
   <node pkg="datasetloader_ros" type="readpathsrv" name="readpathnode" output="screen" if="$(eval datasetname=='fc101')">
     <!-- not working!! -->
-    <param name="basepath" value="/mnt/externaldrive/var/datasets/fc101/videos/" />
+    <param name="basepath" value="$(arg basepath)/fc101/" />
     <param name="splitdir" value="$(find datasetloader_ros)/data/fc101_7030splits"/>
   </node>
 

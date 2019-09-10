@@ -5,7 +5,8 @@
    <arg name="y_hat_input" default="scores_fw"/>
    <arg name="filenamesux" default="$(arg namespace)"/>
    <node name="trainer" pkg="datasetloader_ros" type="trainer.py" respawn="false" output="screen" ns="$(arg namespace)">
-     <param name="glistfile"  value="/mnt/externaldrive/var/datasets/$(arg dataset)/global_pool_train_$(arg filenamesux)" />
+     <param name="glistfile"  value="/run/user/1000/gvfs/smb-share:server=10.0.0.7,share=share/ar/datasets/df_per_action/$(arg dataset)_global_pool_train_$(arg filenamesux)" />
+     <!-- <param name="glistfile"  value="/mnt/externaldrive/var/datasets/$(arg dataset)/global_pool_train_$(arg filenamesux)" /> -->
      <param name="tot"        value="train" />
      <!-- std_msgs.msg.Float32MultiArray , String, caffe_tsn_ros.msg.ScoreArray  -->
      <!-- <param name="yhat_type"  value="caffe_tsn_ros.msg.ScoreArray" /> -->
